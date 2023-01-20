@@ -21,7 +21,7 @@ if __name__=='__main__':
                     struct_list.append(get_structure(seq, coord, pk_predictor, args.window, bpp_package, args.linear_partition))
         else:
             for seq,coord in zip(args.seqs, args.coords):
-                struct_list.append(get_structure(seq, coord, pk_predictor, args.window, bpp_package=None, linear_partition=args.linear_partition))
+                struct_list.append(get_structure(seq, coord, pk_predictor, args.window, args.bpp_packages, args.linear_partition))
 
     df = pd.DataFrame(struct_list,columns=["predictor","start","end","sequence", "struct", "pseudoknot"])
     #TO DO: fix the way these are named so that you can use a smaller job size without it erroring because the file name is too long

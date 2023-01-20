@@ -64,7 +64,7 @@ def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, 
                 seq_windows_str = " ".join([str(x) for x in seq_windows[i:i+size_job]])
                 coords_str = " ".join([str(x) for x in coords[i:i+size_job]])
                 pk_predict_jobs += 1
-                get_struct_on_node(seq_windows_str, coords_str, template_sbatch, temp_folder, pk_predictors_str, bpp_packages_str, window=window, linear_partition=linear_partition)
+                get_struct_on_node(seq_windows_str, coords_str, template_sbatch, temp_folder, pk_predictors_str, window=window, bpp_packages_str=bpp_packages_str, linear_partition=linear_partition)
         else:
             for name in pk_predictors:
                 struct_list = []
@@ -126,11 +126,13 @@ def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, 
         dotbrackets = df2['struct'].to_list()
 
         #run standard deviation over F1_scores_for_window
+        #here is where average F1 scores for all structs in window are stored
         F1_scores_for_window = []
+        #here is where average F1 scores for all pk bps in window are stored
         F1_scores_for_pks_in_window = []
 
         #TO DO: put in a check for if you're using shapeknots, if you only have one set of shape data
-        if len(pk_predictors)==1 and len(bpp_packages)==1:
+        if len(pk_predictors)==1 and len(bpp_packages)<2:
             df2['F1_score'] = np.nan
             df2['F1_outlier'] = np.nan
             df2['F1_for_pk_bps'] = np.nan
@@ -139,7 +141,9 @@ def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, 
         #TO DO: if is not a pseudoknot, should give np.nan value for F1_scores_for_pk
         else:
             for idx, dotbracket1 in enumerate(dotbrackets):
+                #this list contains all individual F1 scores for a single struct
                 F1_scores_for_struct = []
+                #this list contains all individual F1 scores for pk bps in a single struct
                 F1_scores_for_pk_struct = []
                 for idx2, dotbracket2 in enumerate(dotbrackets):
                     if idx != idx2:
@@ -151,9 +155,11 @@ def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, 
                                                                      comparison='PK_basepairs', metric='F1_score'))
 
                 #TO DO: add in standard deviation?
+                #here is where all F1 scores for single struct are averaged
                 F1_scores_for_window.append((sum(F1_scores_for_struct))/(len(F1_scores_for_struct)))
 
                 #TO DO: add in standard deviation?
+                #here is where all F1 scores for pk bps for single struct are averaged
                 F1_scores_for_pks_in_window.append((sum(F1_scores_for_pk_struct))/(len(F1_scores_for_pk_struct)))
 
             #add all F1 scores and outlier determinations to the dataframe as new columns

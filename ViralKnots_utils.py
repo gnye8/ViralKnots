@@ -78,7 +78,7 @@ def get_sliding_windows(full_seq, step, window):
         coords.append(len(full_seq)-window)
     return windows, coords
 
-def get_structure(seq, coord, pk_predictor, window, bpp_package, linear_partition=True):
+def get_structure(seq, coord, pk_predictor, window, bpp_package=None, linear_partition=True):
     '''takes the list of windows, coords, and the desired predictor and outputs a dataframe with the predicted
     structures for every window and a column indicating whether or not it is a pseudoknot and whether or not
     it is "stable"'''
@@ -169,7 +169,7 @@ def get_pk_bp_locs(dotbracket):
 
 #TODO: add a sed command to give each folder its own out and error folder and delete all after
 #probably need to change the arguments to this function so that it inputs multiple sequences to the sbatch file
-def get_struct_on_node(seq_windows_str, coords_str, template_sbatch, temp_folder, pk_predictors_str, bpp_packages_str, window, linear_partition=True):
+def get_struct_on_node(seq_windows_str, coords_str, template_sbatch, temp_folder, pk_predictors_str, window, bpp_packages_str=[], linear_partition=True):
     coords_list = coords_str.split(" ")
     sbatch_name = ''
     for i in range(len(coords_list)):
@@ -177,7 +177,10 @@ def get_struct_on_node(seq_windows_str, coords_str, template_sbatch, temp_folder
     os.system(f'cp {template_sbatch} {temp_folder}/{sbatch_name}.sbatch')
     file = open(f"{temp_folder}/{sbatch_name}.sbatch", "a")
     # RCK you had hard encoded you scratch folder, changed this to check the same path as current script
-    file.write(f"python {os.path.dirname(__file__)}/ViralKnots_single.py --seqs {seq_windows_str} --coords {coords_str} --temp_folder {temp_folder} --pk_predictors {pk_predictors_str} -w {window} --bpp_packages {bpp_packages_str} --linear_partition {linear_partition} \n")
+    if len(bpp_packages_str) > 0:
+        file.write(f"python {os.path.dirname(__file__)}/ViralKnots_single.py --seqs {seq_windows_str} --coords {coords_str} --temp_folder {temp_folder} --pk_predictors {pk_predictors_str} -w {window} --bpp_packages {bpp_packages_str} --linear_partition {linear_partition} \n")
+    else:
+        file.write(f"python {os.path.dirname(__file__)}/ViralKnots_single.py --seqs {seq_windows_str} --coords {coords_str} --temp_folder {temp_folder} --pk_predictors {pk_predictors_str} -w {window} --linear_partition {linear_partition} \n")
     file.close()
     os.popen(f'sbatch {temp_folder}/{sbatch_name}.sbatch')
 
@@ -214,3 +217,58 @@ def get_circularized_windows(full_seq, step, window, size_stitched):
         new_coords.append(str(coords[num_og_windows:][i])+'_c')
 
     return seq_windows, new_coords
+
+def get_F1_scores(df1, pk_predictors, bpp_packages=None):
+
+    df2s = []
+    coords = df1['start'].to_list()
+    for i,coord in enumerate(coords):
+
+        df2 = df1.loc[df1['start'] == coord].copy() # RCK to get rid of warning, since its a copy now also got rid of the .loc fix below (x8)
+        dotbrackets = df2['struct'].to_list()
+
+        #run standard deviation over F1_scores_for_window
+        #here is where average F1 scores for all structs in window are stored
+        F1_scores_for_window = []
+        #here is where average F1 scores for all pk bps in window are stored
+        F1_scores_for_pks_in_window = []
+
+        #TO DO: put in a check for if you're using shapeknots, if you only have one set of shape data
+        if len(pk_predictors)==1 and len(bpp_packages)<2:
+            df2['F1_score'] = np.nan
+            df2['F1_outlier'] = np.nan
+            df2['F1_for_pk_bps'] = np.nan
+            df2['F1_for_pk_bps_outlier'] = np.nan
+
+        #TO DO: if is not a pseudoknot, should give np.nan value for F1_scores_for_pk
+        else:
+            for idx, dotbracket1 in enumerate(dotbrackets):
+                #this list contains all individual F1 scores for a single struct
+                F1_scores_for_struct = []
+                #this list contains all individual F1 scores for pk bps in a single struct
+                F1_scores_for_pk_struct = []
+                for idx2, dotbracket2 in enumerate(dotbrackets):
+                    if idx != idx2:
+
+                        F1_scores_for_struct.append(compare_structures_to_natives([dotbracket1], [dotbracket2],
+                                                                     comparison='basepairs', metric='F1_score'))
+
+                        F1_scores_for_pk_struct.append(compare_structures_to_natives([dotbracket1], [dotbracket2],
+                                                                     comparison='PK_basepairs', metric='F1_score'))
+
+                #TO DO: add in standard deviation?
+                #here is where all F1 scores for single struct are averaged
+                F1_scores_for_window.append((sum(F1_scores_for_struct))/(len(F1_scores_for_struct)))
+
+                #TO DO: add in standard deviation?
+                #here is where all F1 scores for pk bps for single struct are averaged
+                F1_scores_for_pks_in_window.append((sum(F1_scores_for_pk_struct))/(len(F1_scores_for_pk_struct)))
+
+            #add all F1 scores and outlier determinations to the dataframe as new columns
+            df2['F1_score'] = F1_scores_for_window
+            df2['F1_outlier'] = determine_outliers(F1_scores_for_window)
+            df2['F1_for_pk_bps'] = F1_scores_for_pks_in_window
+            df2['F1_for_pk_bps_outlier'] = determine_outliers(F1_scores_for_pks_in_window)
+        df2s.append(df2)
+    df3 = pd.concat(df2s)
+    return df3
