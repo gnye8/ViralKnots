@@ -112,7 +112,7 @@
         module load glpk #for ipknots
         module load mpfr #for ipknots
 
-        python /home/groups/rhiju/rkretsch/PK/arnie/scripts/ViralKnots/ViralKnots.py <--pk_predict> <--shapeknots> -s <seq_filename> --step <step> -w <window> --pk_predictors <list_of_pk_predictors>  --bpp_package <bpp_package> --shape_data_folder <path_to_folder> --shape_data_sets <list_of_data_sets> <--shape_rankings> <--spawn> --template_sbatch <template_sbatch> --num_jobs <num_jobs> <--circularize> --size_stitched <size_stitched>
+        python /home/groups/rhiju/rkretsch/PK/arnie/scripts/ViralKnots/ViralKnots.py <--pk_predict> <--shapeknots> -s <seq_filename> --step <step> -w <window> --pk_predictors <list_of_pk_predictors>  --bpp_packages <bpp_packages> --shape_data_folder <path_to_folder> --shape_data_sets <list_of_data_sets> <--shape_rankings> <--spawn> --template_sbatch <template_sbatch> --num_jobs <num_jobs> <--circularize> --size_stitched <size_stitched>
     ```
 
     - the necessary inputs are as follows:
@@ -122,7 +122,7 @@
         - step: the number of nucleotides for the pipeline to slide down before starting the next window
         - window: the size of the nucleotide window to run predictions over
         - pk_predictors: a list of names of pk predictors to use; these should be formatted as a list separated by spaces NO COMMAS (e.g.: threshknot spotrna knotty pknots)
-        - bpp_package: name of the bpp package you want to use if you are running threshknot; default is contrafold2
+        - bpp_packages: a list of names of the bpp packages you want to use if you are running threshknot; these should be formatted as a list separated by spaces
         - shape_data_folder: default is None; the location of the folder in which you have stored csv's with shape data
         - shape_data_sets: default is None; your shape data should be in files ending with .csv and the shape_data_sets variable is the names of the files WITHOUT the .csv
             - note that the format of the shape data in the file should be one reactivity value per line with no commas or any other comments/labels
