@@ -8,7 +8,7 @@
     AUGUCUGUCUAUAUCUGUA....
     ```
 
-2. ssh onto sherlock by typing the following command into your terminal: 
+2. all RNA prediction packages are preinstalled on sherlock, so it is recommended to run it on the cluster if possible! First, ssh onto sherlock by typing the following command into your terminal: 
     
     `ssh <sunetid>@login.sherlock.stanford.edu -Y`
 
@@ -32,7 +32,7 @@
     ```
 
 4. in order to use arnie, you must also add the following lines to your bashrc file
-    - first, open your bashrc
+    - first, on sherlock, open your bashrc
 
     `nano ~/.bashrc`
     
@@ -112,7 +112,7 @@
         module load glpk #for ipknots
         module load mpfr #for ipknots
 
-        python /home/groups/rhiju/rkretsch/PK/arnie/scripts/ViralKnots/ViralKnots.py <--pk_predict> <--shapeknots> -s <seq_filename> --step <step> -w <window> --pk_predictors <list_of_pk_predictors>  --bpp_package <bpp_package> --shape_data_folder <path_to_folder> --shape_data_sets <list_of_data_sets> <--shape_rankings> <--spawn> --template_sbatch <template_sbatch> --num_jobs <num_jobs>
+        python /home/groups/rhiju/rkretsch/PK/arnie/scripts/ViralKnots/ViralKnots.py <--pk_predict> <--shapeknots> -s <seq_filename> --step <step> -w <window> --pk_predictors <list_of_pk_predictors>  --bpp_package <bpp_package> --shape_data_folder <path_to_folder> --shape_data_sets <list_of_data_sets> <--shape_rankings> <--spawn> --template_sbatch <template_sbatch> --num_jobs <num_jobs> <--circularize> --size_stitched <size_stitched>
     ```
 
     - the necessary inputs are as follows:
@@ -131,6 +131,8 @@
         - template_sbatch: the name and location of the template sbatch file you created in step 5
         - num_jobs: the number of child jobs you want to spawn (max is ~1000 per hour on sherlock)
             - if running shapeknots, this needs to be at least as many as the number of shape data sets you are using
+        - circularize: this command allows you to predict structures if the viral genome circularizes; it will take the number of nucleotides of your choice and add them to the end of the genome; specify this argument if you want to do this, the default is False
+        - size_stitched: this is the number of nucleotides you want to move from the start to the end, if you have specified circularize
 
     - now save the file by typing control+x, then y to save changes, then enter to exit
 
