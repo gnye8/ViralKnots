@@ -93,7 +93,7 @@ def get_structure(seq, coord, pk_predictor, window, bpp_package=None, linear_par
     else:
         dotbracket = pk_predict(seq, pk_predictor)
         pk_predictor_str = pk_predictor
-    if coord[-1] == 'c':
+    if str(coord)[-1] == 'c':
         c_end = int(coord[:-2])+window
         end = str(c_end)+'_c'
     else:

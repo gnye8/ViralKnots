@@ -22,7 +22,12 @@
     ./Miniconda3-latest-Linux-x86_64.sh
     ```
 
-    - now close and reopen your terminal to allow the changes to take effect
+    - to allow these changes to take effect, use the following command or close and reopen your terminal
+
+    ```
+    source ~/.bashrc
+    ```
+    
     - install biopython & other necessary packages
 
     ```
@@ -30,6 +35,11 @@
     conda install scipy
     conda install pandas
     ```
+    
+    - note that you should also check that your version of numpy is below v1.23.0 - if you are not sure, use the following:
+
+    ```
+    pip install numpy==1.22.
 
 4. in order to use arnie, you must also add the following lines to your bashrc file
     - first, on sherlock, open your bashrc
