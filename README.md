@@ -40,6 +40,7 @@
 
     ```
     pip install numpy==1.22.
+    ```
 
 4. in order to use arnie, you must also add the following lines to your bashrc file
     - first, on sherlock, open your bashrc
