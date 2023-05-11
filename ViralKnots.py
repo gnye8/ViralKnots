@@ -1,7 +1,7 @@
 from ViralKnots_utils import *
 
 def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, bpp_packages=[], shape_data_folder=None, shape_data_sets=[], shapeknots=False,
-                shape_rankings=False, spawn=False, template_sbatch=None, num_jobs=None, linear_partition=True, circularize=False, size_stitched=None):
+                shape_rankings=False, spawn=False, template_sbatch=None, num_jobs=None, linear_partition=True, circularize=False, size_stitched=None, antigenome=False):
     '''Takes viral genome and outputs csv with predicted structures, including pseudoknots
         Args:
             seq_filename - fasta file containing RNA sequence for viral genome
@@ -17,17 +17,23 @@ def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, 
                 (no .csv necessary)
                 (note that this is designed to work with single or multiple tracks of shape data)
             circularize - will run the first and last windows stitched together to see if there are potential interactions between the 5' and 3' UTR
-                (note that if you use this, it will print 1 as coords to show that the last window was added the to the first window, and -1 if the reverse of the last window was added to the first window)'''
+                (note that if you use this, it will print 1 as coords to show that the last window was added the to the first window, and -1 if the reverse of the last window was added to the first window)
+            antigenome - will run the reverse complement of the input sequence when specified'''
     ##first retrieve viral sequence and normalized shape data (if directed) and sort into windows
     seq = get_seq(seq_filename)
 
     if circularize:
         seq_windows, coords = get_circularized_windows(seq, step=step, window=window, size_stitched=size_stitched)
+    elif antigenome:
+        antigenome = get_antigenome(seq)
+        seq_windows, coords = get_sliding_windows(antigenome, step=step, window=window)
     else:
         seq_windows, coords = get_sliding_windows(seq, step=step, window=window)
+
     shape_sets = []
     #all_shape_windows is a list with all five shape sets subdivided into windows
     all_shape_windows = []
+    #print(all_shape_windows)
     if shapeknots or shape_rankings:
         for data_set in shape_data_sets:
             shape_data = get_normalized_shape_data(shape_data_folder+'/'+data_set+'.csv')
@@ -90,6 +96,7 @@ def viral_knots(seq_filename, step, window, pk_predictors=[], pk_predict=False, 
                     shape_windows_str = " ".join([",".join(map(str, x)) for x in shape_set[i:i+size_job]])
                     shape_name = str(shape_data_sets[idx])
                     shape_jobs += 1
+                    #print(shape_windows_str)
                     get_shape_on_node(seq_windows_str, coords_str, shape_windows_str, template_sbatch, temp_folder, shape_name, window=window)
         else:
             for track, shape_set in enumerate(all_shape_windows):
@@ -240,6 +247,7 @@ if __name__=='__main__':
     parser.add_argument('--num_jobs', default=None, type=int)
     parser.add_argument('--circularize', action='store_true')
     parser.add_argument('--size_stitched', default=None, type=int)
+    parser.add_argument('--antigenome', action='store_true')
 
     args=parser.parse_args()
 
@@ -265,4 +273,4 @@ if __name__=='__main__':
             package_str += f' {package},'
     print(package_str[:-1])
 
-    viral_knots(args.seq_filename, args.step, args.window, args.pk_predictors, args.pk_predict, args.bpp_packages, args.shape_data_folder, args.shape_data_sets, args.shapeknots, args.shape_rankings, args.spawn, args.template_sbatch, args.num_jobs, args.linear_partition, args.circularize, args.size_stitched)
+    viral_knots(args.seq_filename, args.step, args.window, args.pk_predictors, args.pk_predict, args.bpp_packages, args.shape_data_folder, args.shape_data_sets, args.shapeknots, args.shape_rankings, args.spawn, args.template_sbatch, args.num_jobs, args.linear_partition, args.circularize, args.size_stitched, args.antigenome)
